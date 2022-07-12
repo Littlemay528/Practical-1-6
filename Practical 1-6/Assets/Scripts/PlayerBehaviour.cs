@@ -17,6 +17,18 @@ public class PlayerBehaviour : MonoBehaviour
     [Range(0, 10)]
     public float rollSpeed = 5;
 
+    public enum MobileHorizMovement
+    {
+        Accelerometer,
+        ScreenTouch
+    }
+
+    public MobileHorizMovement horizMovement = MobileHorizMovement.Accelerometer;
+
+    [Header("Swipe Properties")]
+    [Tooltip("How far will the player move upon swiping")]
+    public float swipeMove = 2f;
+
     //Start is called before the first frame update
     void Start()
     {
@@ -40,6 +52,8 @@ public class PlayerBehaviour : MonoBehaviour
         Touch touch = Input.touches[0];
 
         SwipeTeleport(touch);
+
+        ScalePlayer();
         }
     #endif
     }
@@ -66,14 +80,22 @@ public class PlayerBehaviour : MonoBehaviour
         CalculateMovement(Input.mousePosition);
         }
     // Check if we are running on a mobile device
-
     #elif UNITY_IOS || UNITY_ANDROID
+
+    if(horizMovement == MobileHorizMovement.Accelerometer)
+    {
+    //Move player based on direction of the accelerometer
+    horizontalSpeed = Input.acceleration.x * dodgeSpeed;
+    }
     // Check if Input has registered more than zero touches
     if (Input.touchCount > 0)
         {
-        // Store the first touch detected.
-        Touch touch = Input.touches[0];
-        horizontalSpeed = CalculateMovement(touch.position);
+            if (horizMovement == MobileHorizMovement.ScreenTouch)
+            {
+                // Store the first touch detected.
+                Touch touch = Input.touches[0];
+                horizontalSpeed = CalculateMovement(touch.position);
+            }
         }
     #endif
         rb.AddForce(horizontalSpeed, 0, rollSpeed);
@@ -102,9 +124,6 @@ public class PlayerBehaviour : MonoBehaviour
         //replace horizontalSpeed with our own value
         return xMove * dodgeSpeed;
     }
-    [Header("Swipe Properties")]
-    [Tooltip("How far will the player move upon swiping")]
-    public float swipeMove = 2f;
 
     [Tooltip("How far must the player swipe before we will execute the action (in inches)")]
     public float minSwipeDistance = 0.25f;
@@ -167,6 +186,58 @@ public class PlayerBehaviour : MonoBehaviour
                 //Move the player
                 rb.MovePosition(rb.position + (moveDirection * swipeMove));
             }
+        }
+    }
+    [Header("Scaling Properties")]
+    [Tooltip("The minimum size (in Unity units) that the player should be")]
+    public float minScale = 3.0f;
+
+    [Tooltip("The maximum size (in Unity units) that the player should be")]
+    public float maxScale = 3.0f;
+
+    ///<summary>
+    ///The current scale of the player
+    ///</summary>
+    private float currentScale = 1;
+
+    ///<summary>
+    ///Will change the player's scale via pinching and stretching two touch events
+    ///</summary>
+    private void ScalePlayer()
+    {
+        //We must have two touches to check if we are scaling the object
+        if(Input.touchCount != 2)
+        {
+            return;
+        }
+        else
+        {
+            //Store the touchs detected.
+            Touch touch0 = Input.touches[0];
+            Touch touch1 = Input.touches[1];
+
+            //Find the position in the previous frame of each touch.
+            Vector2 touch0Prev = touch0.position - touch0.deltaPosition;
+            Vector2 touch1Prev = touch1.position - touch1.deltaPosition;
+
+            //Find the distance (or magnitude) between the touches in each frame.
+            float prevTouchDeltaMag = (touch0Prev - touch1Prev).magnitude;
+            float touchDeltaMag = (touch0.position - touch1.position).magnitude;
+
+            //Find the difference in the distances between each frame.
+            float deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
+
+            //Keep the change consistent no matter what the framerate is
+            float newScale = currentScale - (deltaMagnitudeDiff * Time.deltaTime);
+
+            //Ensure that it is valid
+            newScale = Mathf.Clamp(newScale, minScale, maxScale);
+
+            //Update the player's scale
+            transform.localScale = Vector3.one * newScale;
+
+            //Set our current scale for the next frame
+            currentScale = newScale;
         }
     }
 }
