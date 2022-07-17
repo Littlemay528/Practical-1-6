@@ -20,12 +20,26 @@ public class ObstacleBehaviour : MonoBehaviour
             Invoke("ResetGame", waitTime);
         }
     }
-/// <summary>
-/// Will restart the currently loaded level
-/// </summary>
-private void ResetGame()
+    /// <summary>
+    /// Will restart the currently loaded level
+    /// </summary>
+    private void ResetGame()
     {
         //Restarts the current level
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public GameObject explosion;
+    ///<summary>
+    ///If the object is tapped, we spawn an explosion and destroy this object
+    ///</summary>
+    private void PlayerTouch()
+    {
+        if (explosion != null)
+        {
+            var particles = Instantiate(explosion, transform.position, Quaternion.identity);
+            Destroy(particles, 1.0f);
+        }
+        Destroy(this.gameObject);
     }
 }

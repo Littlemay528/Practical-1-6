@@ -44,18 +44,22 @@ public class PlayerBehaviour : MonoBehaviour
     private void Update()
     {
         //Check if we are running on a mobile device
-    #if UNITY_IOS || UNITY_ANDROID
+#if UNITY_IOS || UNITY_ANDROID
+
     //Check if Input has registered more than zero touches
     if (Input.touchCount > 0)
+
         {
         //Store the first touch detected.
         Touch touch = Input.touches[0];
 
         SwipeTeleport(touch);
 
+        TouchObjects(touch);
         ScalePlayer();
         }
-    #endif
+        
+#endif
     }
 
     /// <summary>
@@ -69,37 +73,38 @@ public class PlayerBehaviour : MonoBehaviour
         var horizontalSpeed = Input.GetAxis("Horizontal") * dodgeSpeed;
         // Check if we are running either in the Unity editor or in a
         // standalone build.
-    #if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
-    // Check if we're moving to the side
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
+        // Check if we're moving to the side
     horizontalSpeed = Input.GetAxis("Horizontal") * dodgeSpeed;
+
     // If the mouse is held down (or the screen is tapped
     // on Mobile)
     if (Input.GetMouseButton(0))
         {
-        horizontalSpeed =
-        CalculateMovement(Input.mousePosition);
+        horizontalSpeed = CalculateMovement(Input.mousePosition);
         }
-    // Check if we are running on a mobile device
-    #elif UNITY_IOS || UNITY_ANDROID
-
+// Check if we are running on a mobile device
+#elif UNITY_IOS || UNITY_ANDROID
     if(horizMovement == MobileHorizMovement.Accelerometer)
+     {
+     // Move player based on direction of the accelerometer
+     horizontalSpeed = Input.acceleration.x * dodgeSpeed;
+     }
+
+    //Check if Input has registered more than zero touches
+     if (Input.touchCount > 0)
     {
-    //Move player based on direction of the accelerometer
-    horizontalSpeed = Input.acceleration.x * dodgeSpeed;
+         if (horizMovement == MobileHorizMovement.ScreenTouch)
+         {
+            //Store the first touch detected.
+            Touch touch = Input.touches[0];
+            horizontalSpeed = CalculateMovement(touch.position);
+         }
     }
-    // Check if Input has registered more than zero touches
-    if (Input.touchCount > 0)
-        {
-            if (horizMovement == MobileHorizMovement.ScreenTouch)
-            {
-                // Store the first touch detected.
-                Touch touch = Input.touches[0];
-                horizontalSpeed = CalculateMovement(touch.position);
-            }
-        }
-    #endif
+#endif
         rb.AddForce(horizontalSpeed, 0, rollSpeed);
     }
+
     /// <summary>
     /// Will figure out where to move the player horizontally
     /// </summary>
@@ -238,6 +243,28 @@ public class PlayerBehaviour : MonoBehaviour
 
             //Set our current scale for the next frame
             currentScale = newScale;
+        }
+    }
+
+    ///<summary>
+    ///Will determine if we are touching a game object and if so call events for it
+    ///</summary>
+    ///<param name="touch"> Our touch event</param>
+    private static void TouchObjects(Touch touch)
+    {
+        //Convert the position into a ray
+        Ray touchRay = Camera.main.ScreenPointToRay(touch.position);
+
+        RaycastHit hit;
+
+        //Create a LayerMask that will collide with all possible channels
+        int layerMask = ~0;
+
+        //Are we touching an object with a collider?
+        if (Physics.Raycast(touchRay, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore))
+        {
+            //Call the PlayerTouch function if it exists on a component attached to this object
+            hit.transform.SendMessage("PlayerTouch", SendMessageOptions.DontRequireReceiver);
         }
     }
 }
