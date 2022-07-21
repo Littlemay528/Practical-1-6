@@ -434,7 +434,7 @@ MonoBehaviour:
   horizMovement: 1
   swipeMove: 2
   minSwipeDistance: 0.25
-  minScale: 3
+  minScale: 1
   maxScale: 3
 --- !u!1 &1896682004
 GameObject:
