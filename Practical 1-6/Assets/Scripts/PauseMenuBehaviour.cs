@@ -33,6 +33,6 @@ public class PauseMenuBehaviour : MonoBehaviour
     void Start()
     {
         //Must be reset in Start or else game will be paused upon restart
-        paused = false;
+        SetPauseMenu(false);
     }
 }

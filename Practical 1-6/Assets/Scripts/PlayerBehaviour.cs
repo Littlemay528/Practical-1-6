@@ -43,6 +43,11 @@ public class PlayerBehaviour : MonoBehaviour
     ///</summary>
     private void Update()
     {
+        //If the game is paused, don't do anything
+        if (PauseMenuBehaviour.paused)
+        {
+            return;
+        }
         //Check if we are running on a mobile device
 #if UNITY_IOS || UNITY_ANDROID
 
@@ -67,8 +72,13 @@ public class PlayerBehaviour : MonoBehaviour
     /// to put
     /// Anything based on time.
     /// </summary>
-    private void FixedUpdate()
+    void FixedUpdate()
     {
+        //If the game is paused, don't do anything
+        if (PauseMenuBehaviour.paused)
+        {
+            return;
+        }
         // Check if we're moving to the side
         var horizontalSpeed = Input.GetAxis("Horizontal") * dodgeSpeed;
         // Check if we are running either in the Unity editor or in a
