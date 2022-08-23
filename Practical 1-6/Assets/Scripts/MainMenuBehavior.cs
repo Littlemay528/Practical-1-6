@@ -13,5 +13,6 @@ public class MainMenuBehavior : MonoBehaviour
     public void LoadLevel(string levelName)
     {
         SceneManager.LoadScene(levelName);
+
     }
 }

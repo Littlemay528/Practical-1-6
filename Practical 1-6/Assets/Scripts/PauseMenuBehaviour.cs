@@ -17,6 +17,11 @@ public class PauseMenuBehaviour : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+
+    public void LoadMainMenu(string levelName)
+    {
+        SceneManager.LoadScene(levelName);
+    }
     
     ///<summary>
     ///Will turn our pause menu on or off
